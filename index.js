@@ -7,6 +7,7 @@ import rateLimit from "express-rate-limit";
 import connectDB from "./config/db.config.js";
 import apiRoutes from "./routes/api.routes.js";
 import errorHandler from "./middleware/errorHandler.middleware.js";
+
 // Configuration Initializer
 dotenv.config();
 const app = express();
@@ -16,9 +17,13 @@ connectDB();
 
 // 🛡️ High-End Security Middleware
 app.use(helmet());
+
+// 🔥 FIX 1: CORS fallback ko "*" se hata kar localhost kiya taaki credentials crash na ho
+const allowedOrigin = process.env.CLIENT_URL || "http://localhost:5173";
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "*",
+    origin: allowedOrigin,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   }),
@@ -32,7 +37,7 @@ if (process.env.NODE_ENV === "development") {
 // Global Parser
 app.use(express.json());
 
-// ⚡ Cyber Attack Protection: Rate Limiter (Max 100 requests per 15 mins)
+// ⚡ Cyber Attack Protection: Rate Limiter
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -40,7 +45,8 @@ const limiter = rateLimit({
     message: "Too many requests from this IP layer. Infrastructure protected.",
   },
 });
-app.use("/api/", limiter);
+// FIX 2: Slash issue avoid karne ke liye routing standardize ki
+app.use("/api", limiter);
 
 // API Routes Mounting
 app.use("/api", apiRoutes);
@@ -49,8 +55,13 @@ app.use("/api", apiRoutes);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(
-    `⚡ NextGen Cyber Backend running in ${process.env.NODE_ENV} mode on port ${PORT}`,
-  );
-});
+
+// Localhost ke liye server listen karega (Vercel is block ko ignore kar deta hai)
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    console.log(`⚡ NextGen Cyber Backend running on port ${PORT}`);
+  });
+}
+
+// 🔥 FIX 3: Vercel Serverless Architecture ke liye app ko export karna MANDATORY hai
+export default app;

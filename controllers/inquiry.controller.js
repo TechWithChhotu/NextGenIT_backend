@@ -1,7 +1,7 @@
 import { validationResult } from "express-validator";
 import Inquiry from "../models/Inquiry.models.js";
 import nodemailer from "nodemailer";
-import crypto from "crypto"; // Unique Ticket ID generate karne ke liye
+import crypto from "crypto";
 
 export const createInquiry = async (req, res, next) => {
   try {

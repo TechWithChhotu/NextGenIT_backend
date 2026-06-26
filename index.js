@@ -53,7 +53,14 @@ app.use("/api", apiRoutes);
 
 // Global Error Catchment Pipeline
 app.use(errorHandler);
-
+// Root route handler
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Welcome to TechSolex CRM Engine API Infrastructure.",
+    status: "Operational",
+  });
+});
 const PORT = process.env.PORT || 5000;
 
 // Localhost ke liye server listen karega (Vercel is block ko ignore kar deta hai)
